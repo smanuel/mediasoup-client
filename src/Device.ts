@@ -55,6 +55,26 @@ interface InternalTransportOptions extends TransportOptions
 	direction: 'send' | 'recv';
 }
 
+function isIOSCordova(browser: any, majorVersion: number) : boolean
+{
+	const platform = browser.getPlatform();
+
+	if (platform.type === 'mobile' && platform.vendor === 'Apple')
+	{
+		const version = browser.getOSVersion();
+		const parts = version.split('.');
+		const major = parseInt(parts[0]);
+
+		return major >= majorVersion;
+	}
+	else
+	{
+		const isCordova = (browser.getOSName() === 'macOS') && (window as any).cordova;
+
+		return isCordova;
+	}
+}
+
 export function detectDevice(): BuiltinHandlerName | undefined
 {
 	// React-Native.
@@ -104,7 +124,7 @@ export function detectDevice(): BuiltinHandlerName | undefined
 		}
 		// Safari with Unified-Plan support enabled.
 		else if (
-			browser.satisfies({ safari: '>=12.0' }) &&
+			(browser.satisfies({ safari: '>=12.0' }) || isIOSCordova(browser, 12)) &&
 			typeof RTCRtpTransceiver !== 'undefined' &&
 			RTCRtpTransceiver.prototype.hasOwnProperty('currentDirection')
 		)
@@ -112,7 +132,7 @@ export function detectDevice(): BuiltinHandlerName | undefined
 			return 'Safari12';
 		}
 		// Safari with Plab-B support.
-		else if (browser.satisfies({ safari: '>=11' }))
+		else if (browser.satisfies({ safari: '>=11' }) || isIOSCordova(browser, 11))
 		{
 			return 'Safari11';
 		}
